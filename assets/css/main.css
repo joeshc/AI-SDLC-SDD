@@ -399,6 +399,54 @@ main,
   font-size: 0.9375rem;
 }
 
+/* ---- tool strip ----------------------------------------------- */
+
+/* Brand marks are drawn monochrome in the page's ink colour, which is how
+   single-path glyph icons are meant to be used. Where no official mark was
+   available, a plain two-letter monogram stands in — deliberately typographic
+   so it reads as a placeholder rather than as someone's logo. */
+.prose .tool-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  max-width: none;
+  margin: 1.75rem 0;
+  padding: 0;
+}
+
+.tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem 0.4rem 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: 0.8125rem;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.tool__mark {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  fill: var(--ink);
+}
+
+.tool__mark--initial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ink-soft);
+  border-radius: 50%;
+  color: var(--ink-soft);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 /* ---- a11y ----------------------------------------------------- */
 
 :where(a, button):focus-visible {
