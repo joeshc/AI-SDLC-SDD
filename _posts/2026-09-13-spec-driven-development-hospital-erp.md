@@ -2,10 +2,10 @@
 layout: post
 title: "Spec-Driven Development for a Hospital ERP: Human-in-the-Loop Agentic AI, RAG, Voice-to-Text and SOAP Capture"
 subtitle: "Clear specs. Smarter development. Better healthcare."
-description: "A Hospital ERP spans registration, clinical workflows, pharmacy, billing and AI agents. How Spec-Driven Development with GitHub Spec Kit keeps AI-generated software traceable to business intent — through specifications, requirement traceability and human-in-the-loop governance."
+description: "A reference guide to building a Hospital ERP with Spec-Driven Development: the full clinical, diagnostic, financial and operational domain model, and an Agentic AI architecture where every hospital AI agent is a specified, governed, testable component with defined tools, permissions, approval boundaries and audit."
 date: 2026-09-13
 slug: spec-driven-development-hospital-erp
-reading_time: "24 min read"
+reading_time: "45 min read"
 tags: [ai, spec-driven-development, healthcare, architecture]
 ---
 
@@ -737,7 +737,38 @@ hospital-erp/
 │   ├── 018-ai-rag/
 │   ├── 019-ai-agents/
 │   ├── 020-ai-chatbot/
-│   └── 021-analytics/
+│   ├── 021-analytics/
+│   │
+│   │   # extended as the domain coverage grew
+│   ├── 022-patient-identity/
+│   ├── 023-lab-machines/
+│   ├── 024-stores/
+│   ├── 025-procurement/
+│   ├── 026-operating-theatre/
+│   ├── 027-blood-bank/
+│   ├── 028-cssd/
+│   ├── 029-diet-cafeteria/
+│   ├── 030-administration/
+│   ├── 031-biomedical/
+│   ├── 032-facilities/
+│   ├── 033-contact-centre/
+│   ├── 034-feedback/
+│   ├── 035-follow-up/
+│   ├── 036-ai-orchestration/
+│   ├── 037-ai-voice/
+│   ├── 038-ai-governance/
+│   ├── 039-ai-observability/
+│   ├── 040-ai-incidents/
+│   ├── 041-ai-evaluation/
+│   ├── 042-reporting/
+│   ├── 043-integrations/
+│   ├── 044-notifications/
+│   ├── 045-audit/
+│   ├── 046-rbac/
+│   ├── 047-consent/
+│   ├── 048-data-governance/
+│   ├── 049-security/
+│   └── 050-configuration/
 │
 ├── src/
 ├── tests/
@@ -774,7 +805,379 @@ This is especially important for enterprise healthcare software.
 
 ---
 
-## 17. AI Agents Should Also Be Specified
+## 17. The Hospital ERP Domain Model
+
+A Hospital ERP is not a collection of screens. It is a set of domains that share a patient identity, a clock, a ledger and an audit trail. Screens are how people reach those domains; they are not the system.
+
+Laying the domains out as layers makes the dependency direction visible. Everything below rests on the identity established above it.
+
+```text
+Patient
+  ↓
+Clinical
+  ↓
+Diagnostics
+  ↓
+Therapeutics
+  ↓
+Operations
+  ↓
+Finance
+  ↓
+Insurance
+  ↓
+People
+  ↓
+Supply Chain
+  ↓
+Facilities
+  ↓
+Patient Experience
+  ↓
+Analytics
+  ↓
+AI
+  ↓
+Governance
+```
+
+*Figure 12 — Domain layers. Each layer depends on the correctness of the ones above it, which is why patient identity errors are so expensive.*
+
+Expanded, the domains a working hospital system has to account for are these. The list is long on purpose: the length is the argument for specification.
+
+| Layer | Domains |
+|---|---|
+| Identity | Authentication, Patient Identity, Consent, RBAC |
+| Clinical | Registration, Appointments, OPD, IPD, Emergency, Doctor Workflow, Nursing, SOAP Documentation, Voice-to-Text |
+| Diagnostics | Laboratory, Lab Analyzer Management, Radiology (RIS/PACS) |
+| Therapeutics | Pharmacy, Operating Theatre, Blood Bank, CSSD |
+| Operations | Inventory, Stores, Procurement, Diet and Cafeteria, Biomedical, Facilities |
+| Finance | Billing, GST and Tax, Accounts Receivable and Payable |
+| Insurance | Payer and TPA, Preauthorization, Claims |
+| People | HR, Credentialing, Rostering, Training |
+| Patient Experience | Contact Centre, Feedback, Service Recovery, Follow-up |
+| Analytics | Reporting, KPI Dashboards, Management Copilot |
+| AI | RAG, Agents, Orchestration, Chatbot, Voice |
+| Governance | AI Governance, Observability, Evaluation, Incidents, Audit, Data Governance, Security |
+
+Two things follow from this table. First, no single specification can cover a hospital — which is why the repository in section 15 is organised per capability. Second, most of the hard defects live between domains rather than inside them: a patient merged in one domain and not another, a charge posted against a cancelled encounter, a result filed to a closed visit.
+
+> **Key insight**
+>
+> The domains are not modules to be built in isolation. They are parties to a shared contract about what a patient, an encounter and a charge mean. That contract is the specification's job.
+{: .callout .callout--insight}
+
+---
+
+## 18. Clinical Workflows: OPD, IPD and Emergency
+
+Three clinical pathways carry most hospital volume. Each has a different shape, and each fails differently, so each needs its own specification rather than a generic "visit" abstraction.
+
+### Outpatient
+
+```text
+Registration
+  → Appointment
+  → Check-in
+  → Queue
+  → Consultation
+  → SOAP
+  → Orders
+  → Prescription
+  → Pharmacy
+  → Billing
+  → Follow-up
+```
+
+The specification questions here are about time and queue fairness: what happens to a patient who arrives early, what happens to the queue when a doctor runs late, and whether an order placed during consultation can be billed before it is performed.
+
+### Inpatient
+
+```text
+Admission
+  → Bed
+  → Doctor
+  → Nursing
+  → Orders
+  → Diagnostics
+  → Pharmacy
+  → Procedure
+  → Billing
+  → Insurance
+  → Discharge
+```
+
+Inpatient care runs for days, so the hard requirements are about accumulation and state: charges accrue continuously, orders supersede one another, the patient moves between beds and wards, and the bill is provisional until discharge. A specification that treats admission as a single transaction will not survive contact with a ward.
+
+### Emergency
+
+```text
+Registration
+  → Triage
+  → Doctor
+  → Orders
+  → Treatment
+  → Observation
+  → Admission / Discharge
+```
+
+Emergency inverts the usual order: treatment can begin before identity is fully established, and registration may complete retrospectively. The specification has to permit that inversion explicitly, or staff will work around the system during exactly the moments when the record matters most.
+
+> **Healthcare principle**
+>
+> Triage acuity is a clinical judgement. A system may present information, prompt for a score, and record who assigned it — but the acuity decision itself stays with a qualified clinician, and no agent described later in this article changes that.
+{: .callout .callout--principle}
+
+---
+
+## 19. Nursing
+
+Nursing generates more records per patient-day than any other role, and most of them are time-series rather than documents.
+
+A nursing specification needs to cover ward census and patient assignment, vitals, nursing notes, the Medication Administration Record, intake and output, the care plan, nursing tasks, risk assessments such as fall risk and pressure injury, escalation criteria, and shift handover.
+
+Handover is the highest-risk moment in the list, because information crosses a boundary between two people who are each accountable. It is a good candidate for AI assistance and a poor candidate for AI authority:
+
+```text
+Patient Data
+  → AI Handover Draft
+  → Nurse Review
+  → Nurse Approval
+  → Handover
+```
+
+The draft saves transcription time. The approval step is what makes the handover a nursing record rather than a model output, and the specification should name the nurse who approved it.
+
+---
+
+## 20. Diagnostics: Laboratory, Analyzers and Radiology
+
+### The laboratory is a manufacturing line
+
+A lab order is not a request for a number. It is the start of a physical process with custody, machines and two distinct validation steps.
+
+```text
+Lab Order
+  → Sample Collection
+  → Barcode
+  → Accession
+  → Sample Validation
+  → Analyzer
+  → Result
+  → Technical Validation
+  → Pathologist Validation
+  → Report
+  → Critical Result
+  → Clinician
+```
+
+*Figure 13 — The laboratory pathway. Two validations, not one: technical validation checks the run, pathologist validation checks the meaning.*
+
+A specification that stops at "result" misses most of what a lab does. It also needs to cover the machines themselves, which is the part most ERP designs forget.
+
+**Analyzer and machine registry:** manufacturer, model, serial number, location, connectivity and interface status, quality control schedules, calibration, reagent lots, test-to-analyzer mapping, machine queue depth, machine errors and downtime.
+
+**Result lifecycle:** corrected results, critical values, and result versioning. A corrected result is not an edit — the original was already acted on, so both versions must survive with the reason for correction.
+
+When a machine fails, the specification should say what happens rather than leaving it to whoever is on shift:
+
+```text
+Analyzer Offline
+  → Detect
+  → Queue Tests
+  → Route to Alternate Analyzer
+  → Notify Lab
+  → Resume
+  → Audit
+```
+
+### Radiology
+
+Radiology brings its own standards and its own division of labour: RIS for the workflow, PACS for the images, DICOM as the format, the modality as the source, and accession numbers tying a study to an order.
+
+```text
+Imaging Study
+  ↓
+PACS / DICOM
+  ↓
+AI Screening
+  ↓
+Priority
+  ↓
+Radiologist Review
+  ↓
+Final Interpretation
+```
+
+> **Healthcare principle**
+>
+> AI screening here supports triage and worklist prioritisation — deciding what a radiologist looks at first. The radiologist remains responsible for the final interpretation. Nothing in this design represents autonomous diagnosis.
+{: .callout .callout--principle}
+
+---
+
+## 21. Pharmacy, Inventory, Stores and Procurement
+
+### Pharmacy
+
+```text
+Prescription
+  → Verification
+  → Stock Check
+  → Dispensing
+  → Billing
+  → Inventory Deduction
+```
+
+The specification must cover verification against the prescription, availability, batch and expiry selection, dispensing, billing, inventory deduction, returns, and medication safety checks. Batch and expiry are not inventory trivia in a hospital — they are the thread that makes a recall actionable.
+
+### Inventory
+
+Item master, category, unit, batch, lot, serial number, expiry, location; minimum, maximum and reorder levels; reserved, available, damaged and expired stock; and the movements that change them — receipt, issue, transfer, adjustment, return and reconciliation.
+
+The distinction between *reserved* and *available* stock is the one most worth specifying precisely, because it is what stops the same unit being promised to two patients.
+
+### Stores
+
+A hospital does not have one store. It has a central store plus pharmacy, laboratory, operating theatre, ward and emergency stores, each with its own custody and replenishment rules. Transfers between them are inventory movements with an approver, not silent adjustments.
+
+### Procurement
+
+```text
+Requirement
+  → Purchase Request
+  → Approval
+  → RFQ
+  → Vendor
+  → Quotation
+  → Purchase Order
+  → Goods Receipt
+  → Quality Check
+  → Stock
+  → Invoice
+  → Payment
+```
+
+*Figure 14 — Procurement lifecycle. Goods receipt and quality check are separate steps; stock that failed inspection must not become available stock.*
+
+---
+
+## 22. Operating Theatre, Blood Bank, CSSD and Diet
+
+### Operating theatre
+
+```text
+Surgery Request
+  → Approval
+  → Scheduling
+  → Pre-op
+  → Consent
+  → Anesthesia
+  → OT
+  → Surgery
+  → Recovery
+  → Post-op
+  → Billing
+  → Discharge
+```
+
+The domain covers OT rooms and schedules, the surgical team (surgeon, assistant, anesthetist, nursing), pre-operative assessment, consent, pre-anesthesia evaluation, the surgical safety checklist, implants, the procedure record, PACU and recovery, OT billing, and the awkward realities — cancellations, delays, and emergency cases that displace scheduled ones.
+
+Implant tracking deserves specific attention: an implant is a serial-numbered item that goes into a patient and must remain traceable for years.
+
+### Blood bank
+
+```text
+Request
+  → Compatibility
+  → Cross Match
+  → Reserve
+  → Issue
+  → Transfusion
+  → Record
+  → Audit
+```
+
+Donor, blood group, component, unit, screening, storage, reservation, cross-match, issue, return, transfusion, reaction, expiry and wastage. Traceability from donor to recipient is the defining requirement of the domain, and it is bidirectional — from a unit to the patient who received it, and from a patient back to every unit they were given.
+
+### CSSD
+
+Instrument sets, cleaning, packing, sterilisation, autoclave cycles, chemical and biological indicators, sterility expiry, storage, issue, return, and traceability of a set to the procedure it was used in.
+
+CSSD is where four domains meet: **CSSD ↔ Operating Theatre ↔ Inventory ↔ Infection Control**. A failed sterilisation cycle has to be able to reach every patient exposed to sets from that cycle, which is only possible if the traceability was specified before it was needed.
+
+### Diet and cafeteria
+
+Diet orders, dietician review, diet types, allergies and restrictions, meal plans, kitchen production, ward delivery, patient diet records, staff cafeteria and billing where applicable. Allergy and restriction handling is a patient-safety requirement, not a catering preference.
+
+---
+
+## 23. Finance: Billing, GST and Insurance
+
+### Billing and finance
+
+Estimates, deposits and advances; charges, packages and discounts; invoices, payments, refunds, credit and debit notes; accounts receivable and payable; collections, reconciliation, revenue and profitability.
+
+The specification question that matters most is when a charge becomes final, and who may change it afterwards — which is exactly the worked example in section 14.
+
+### GST and tax
+
+GST with CGST, SGST and IGST splits; HSN and SAC codes; tax categories; inclusive and exclusive pricing; service-to-tax mapping across pharmacy, laboratory and procedures; purchase tax; credit and debit notes; and tax reporting.
+
+Tax must be configuration-driven rather than coded into each module. Rates and mappings change on legislative timelines that have nothing to do with release cycles, and a hospital cannot redeploy its ERP to respond to a notification.
+
+### Insurance and TPA
+
+```text
+Eligibility
+  → Preauthorization
+  → Enhancement
+  → Approval
+  → Treatment
+  → Documentation
+  → Claim
+  → Query
+  → Resubmission
+  → Settlement
+```
+
+*Figure 15 — The insurance lifecycle. Enhancement and resubmission are loops, not exceptions; a specification that models only the straight path will not match reality.*
+
+Payer, TPA, policy, coverage, exclusions, authorization, denial, appeal and settlement. Denials and queries are normal traffic, so the specification should treat them as first-class states with owners and deadlines rather than error conditions.
+
+---
+
+## 24. People and Plant: HR, Administration, Biomedical and Facilities
+
+### HR and credentialing
+
+Employee records, qualifications, licences, medical registration, credentials and credential expiry, training and mandatory training, attendance, shifts, rostering, leave, payroll integration, performance, onboarding and offboarding.
+
+Credential expiry is the one to specify carefully. A lapsed registration is not an HR inconvenience — it is a clinician who must not be rostered, which makes it a scheduling constraint and an access-control input.
+
+### Administration
+
+Users, roles, permissions, departments, locations, hospitals and branches, master data, configuration, workflow and notification configuration, consent, and identity. This is the domain that determines what every other domain is allowed to do.
+
+### Biomedical
+
+Equipment and device registry, calibration, maintenance, AMC and warranty, breakdowns, preventive maintenance schedules and vendors. It overlaps the lab analyzer registry from section 20 and should share a device identity with it rather than keeping a second list.
+
+### Facilities
+
+Building, floor, room, bed; housekeeping, maintenance, work orders and utilities. Bed is where facilities meets clinical care — the same object is a physical asset to one domain and a patient location to another, and the specification has to say which is authoritative.
+
+---
+
+## 25. Patient Experience
+
+Contact centre and calls, complaints and grievances, feedback, service recovery, patient satisfaction, escalation, messaging over WhatsApp, SMS and email, and follow-up.
+
+Service recovery is worth specifying rather than leaving to goodwill: a complaint has an owner, a clock, an escalation path and an outcome, in the same way a lab order does. Follow-up closes the loop that the outpatient pathway in section 18 opens.
+
+---
+
+## 26. AI Agents Should Also Be Specified
 
 AI agents should not simply be added because:
 
@@ -797,7 +1200,7 @@ flowchart TD
     A --> J[Analytics Agent]
 ```
 
-*Figure 12 — Agents as specified components, each with its own purpose, permissions and escalation rules.*
+*Figure 16 — Agents as specified components, each with its own purpose, permissions and escalation rules.*
 
 Each agent should have a specification defining:
 
@@ -824,7 +1227,221 @@ Instead:
 
 ---
 
-## 18. RAG for the Hospital
+## 27. The Standard Agent Specification
+
+An AI agent is not an LLM prompt with a friendly name, and it is not a chatbot with database access. It is an operational component with a defined responsibility, a fixed set of tools, explicit permissions, an approval boundary and an audit trail. If it cannot be described in those terms, it is not ready to run in a hospital.
+
+Every agent in this architecture is specified with the same template. The template is the point: it turns "we added AI to discharge" into something a reviewer can approve or reject.
+
+```text
+Agent
+│
+├── Purpose                 What problem it solves
+├── Business Owner          Who is accountable for its behaviour
+├── Users                   Who it acts for
+├── Agent Type              Answerer / Summariser / Drafter / Monitor / Workflow
+├── Risk Classification     Low / Medium / High
+├── Trigger                 What starts it
+├── Preconditions           What must be true before it runs
+├── Inputs                  Data it receives
+├── Context                 Scope of what it may see
+├── Knowledge Sources       Versioned RAG collections it may cite
+├── Decision / Reasoning    What it is deciding
+├── Tools                   The only actions it can take
+├── Permissions             Acting as whom, over which records
+├── System Actions          Writes it may perform
+├── Output                  What it produces
+├── Human Approval          Who must approve, and before what
+├── Escalation              Where it hands off to a person
+├── Exception Handling      What it does when reality disagrees
+├── Safety Constraints      What it must never do
+├── Audit Events            What is recorded
+├── Metrics                 How its usefulness is measured
+└── Failure / Recovery      Timeout, retry, fallback, idempotency
+```
+
+*Figure 17 — The agent specification template. Fourteen of these fields constrain the agent; only three describe what it produces.*
+
+> **Key insight**
+>
+> A specification that says what an agent may do is incomplete. The fields that matter most in a hospital are the ones that say what it may not do, who must approve before it acts, and what happens when its tools fail.
+{: .callout .callout--insight}
+
+---
+
+## 28. Agent Types
+
+Four categories cover most hospital agents, plus a controlled fifth for agents that change system state. The type determines the default approval posture, which is why it is worth naming before anything else.
+
+| Type | What it does | Approval posture | Examples |
+|---|---|---|---|
+| Answerer | Returns authorised information, with citations | Usually none | Hospital Knowledge Agent, Policy Agent |
+| Summariser | Condenses information the user may already access | Usually none | Patient Summary, Management Summary |
+| Drafter | Produces content a human must validate | Always, before the output counts | SOAP, Nursing Handover, Discharge Summary, Insurance Appeal |
+| Monitor | Watches conditions and raises actions or exceptions | None to raise; human acts | Critical Result, Discharge Readiness, Bed Flow, Credential Expiry, Claim Denial |
+| Workflow / Action | Performs operational actions through tools | Depends on risk; never for clinical decisions | Appointment, Diagnostic Coordination, Inventory Replenishment |
+
+The distinction that does the most work is Drafter versus Workflow. A Drafter's output is inert until a person signs it. A Workflow agent changes the system, so its permissions and idempotency matter more than its prose.
+
+---
+
+## 29. The Hospital AI Agent Catalogue
+
+The agents below are grouped by the domain that owns them. Not every entry is a separate running service — several are capabilities grouped under one domain agent, and the catalogue says so rather than implying thirty independent autonomous systems.
+
+**Patient domain.** Patient Access Agent, Registration Agent, Appointment Agent, Follow-up Agent, Patient Communication Agent.
+
+**Clinical domain.** Clinical Documentation / SOAP Agent, Voice Documentation Agent, Nursing Handover Agent, Diagnostic Coordination Agent, Discharge Summary Agent.
+
+**Diagnostics.** Laboratory Coordination Agent, Critical Result Escalation Agent, Radiology Screening Agent.
+
+**Pharmacy.** Pharmacy Workflow Agent, Medication Availability Agent.
+
+**Finance.** Billing Explanation Agent, Claim Denial Agent, Insurance Preauthorization Agent.
+
+**Operations.** Bed / Queue Flow Agent, Inventory Replenishment Agent, Procurement Agent, Staff Rostering Agent, Facilities / Equipment Agent.
+
+**Patient experience.** Contact Centre Agent, Feedback / Service Recovery Agent.
+
+**Enterprise AI.** Management Copilot, AI Trainer Agent, Knowledge / RAG Agent, AI Governance Agent, AI Observability Agent.
+
+In practice the Registration and Patient Access agents are usually one agent with two entry points, and the Voice Documentation Agent is a capability of the SOAP Agent rather than a peer. Catalogue entries are specification units, not deployment units — the specification decides which are which.
+
+### Specification summary
+
+| Agent | Type | Trigger | Knowledge | Tools | Decision | Human approval | Exception | Audit |
+|---|---|---|---|---|---|---|---|---|
+| Appointment | Workflow | Patient or staff requests a slot | Department schedules, slot rules | Appointment service | Which slot fits | No, for routine scheduling | No slot → waitlist | Action, actor, timestamp |
+| Patient Access | Workflow | New or returning patient | Identity matching rules | Patient registry | Match or create identity | Conditional, on probable duplicate | Ambiguous match → human | Match decision + score |
+| SOAP | Drafter | Doctor starts documentation | Encounter context, terminology | Documentation service | How to structure the note | Yes — doctor signs | Poor transcript → flag, no draft | Draft, edits, signature |
+| Nursing Handover | Drafter | Shift change | Ward and patient data | Handover record | What to carry forward | Yes — nurse approves | Missing vitals → flagged gap | Draft, approver, time |
+| Critical Result | Monitor | Result crosses critical threshold | Critical value ranges | Notification, escalation | Whom to reach, how fast | No, to notify | No acknowledgement → escalate | Every attempt and ack |
+| Radiology Screening | Monitor | Study arrives in PACS | Study metadata | Worklist priority | Suggested priority | Radiologist interprets | Low confidence → normal queue | Suggestion vs outcome |
+| Diagnostic Coordination | Workflow | Order created | Modality prep rules | Scheduling, messaging | Sequence and logistics | No, for logistics | Machine down → reschedule | Schedule changes |
+| Insurance Preauthorization | Drafter | Procedure needs authorisation | Policy, coverage rules | Document assembly | Is the pack complete | Yes — before submission | Missing document → task | Submission and changes |
+| Claim Denial | Monitor | Denial received | Payer rules, history | Case queue | Denial reason class | Yes — to appeal | Ambiguous reason → human | Classification + appeal |
+| Billing Explanation | Answerer | Patient asks about a bill | Tariff, package rules | Billing read | Which lines to explain | No | Disputed charge → finance | Query and answer |
+| Discharge Orchestration | Workflow | Doctor marks likely discharge | Blocker dependencies | Lab, pharmacy, billing, insurance | What blocks discharge | Yes — doctor and billing | Deterioration cancels | Every chase and state |
+| Inventory Replenishment | Monitor | Stock crosses reorder level | Consumption history | Purchase request | What to reorder | Yes — above a threshold | Vendor unavailable → alt | Request and approval |
+| Credential Expiry | Monitor | Credential nears expiry | HR records | Notification, roster flag | Who is affected | No, to notify | Expired → block rostering | Notice and outcome |
+| Management Copilot | Answerer | Manager asks a question | Analytics, permissions | Analytics read | Which evidence answers it | No | Out of scope → refuse | Question and sources |
+
+---
+
+## 30. Agent Specifications in Detail
+
+Six agents, specified at the depth a reviewer needs. These are illustrative designs, not descriptions of a deployed production system.
+
+### Appointment Agent
+
+```text
+Type:            Workflow
+Risk:            Low
+Trigger:         Patient or staff requests an appointment.
+Inputs:          Patient, doctor, department, availability, preferences.
+Decision:        Identify an appropriate available slot.
+Tools:           Appointment service only.
+Action:          Create, reschedule or cancel.
+Human approval:  Not required for routine scheduling.
+Exception:       No suitable slot → waitlist or escalation to the desk.
+Safety:          May not override clinical priority or triage.
+Audit:           Agent action, acting user, timestamp, slot before and after.
+```
+
+### Diagnostic Coordination Agent
+
+```text
+Type:            Workflow
+Risk:            Medium
+Trigger:         Diagnostic order created.
+Inputs:          Patient, order, modality, preparation rules, availability.
+Decision:        Test sequence and logistics.
+Actions:         Schedule test, send preparation instructions, track ETA,
+                 notify patient.
+Human approval:  Not required for logistics.
+Exception:       Delay or machine unavailable → reschedule and notify.
+Critical result: Route immediately to the authorised clinician.
+Safety:          Transmits a critical result. Does not interpret it,
+                 diagnose, or prescribe.
+Audit:           Schedule changes, notifications, escalations.
+```
+
+### Insurance Preauthorization Agent
+
+```text
+Type:            Drafter
+Risk:            Medium
+Trigger:         Admission or procedure requiring authorisation.
+Inputs:          Patient, policy, diagnosis, proposed treatment, documents.
+Decision:        Whether the documentation pack is complete and consistent.
+Action:          Assemble and prepare the authorisation request.
+Human approval:  Required before submission.
+Exception:       Missing document → task to the desk. Payer query or
+                 rejection → case queue with the reason preserved.
+Safety:          Does not assert clinical necessity on its own authority.
+Audit:           Every submission, every change, every payer response.
+```
+
+### Discharge Orchestration Agent
+
+```text
+Type:            Workflow
+Risk:            High
+Trigger:         Doctor marks a patient as likely to be discharged.
+
+Checks:          Pending investigations, pharmacy, billing, insurance,
+                 housekeeping, transport, discharge summary.
+
+Action:          Build the dependency graph, chase blockers, predict
+                 readiness, prepare draft documentation.
+
+Human approval:  Doctor   — discharge summary and prescription
+                 Billing  — final bill release
+
+Exception:       Clinical deterioration cancels the workflow outright.
+                 Payment dispute routes to finance without blocking
+                 clinical discharge.
+Safety:          Never initiates discharge. It removes obstacles to a
+                 discharge a clinician has already judged appropriate.
+Audit:           Every blocker, chase, state change and approval.
+```
+
+### Radiology Screening Agent
+
+```text
+Type:            Monitor
+Risk:            High
+Trigger:         Imaging study received.
+Input:           Study metadata and DICOM-derived information.
+Action:          Screening, priority suggestion, worklist prioritisation.
+Human:           Radiologist review.
+Final reading:   Radiologist, always.
+Exception:       Low model confidence → study takes the normal queue
+                 position rather than a suggested one.
+Safety:          Must not finalise or communicate a diagnosis.
+Audit:           Suggested priority, radiologist's actual priority, outcome.
+```
+
+### SOAP / Voice Documentation Agent
+
+```text
+Type:            Drafter
+Risk:            High
+Trigger:         Doctor starts clinical documentation.
+Input:           Voice transcription and encounter context.
+Action:          Structure the information into a SOAP draft.
+Human:           Doctor reviews, edits and signs.
+Output:          Becomes an official clinical record only after signature.
+Exception:       Poor audio or low transcription confidence → surface the
+                 transcript and flag it; do not produce a confident draft
+                 from unreliable input.
+Safety:          Does not add clinical content the encounter did not contain.
+Audit:           Transcript, draft, every edit, signature, amendments.
+```
+
+---
+
+## 31. RAG for the Hospital
 
 A hospital-wide RAG system can provide grounded access to organizational knowledge.
 
@@ -856,7 +1473,7 @@ flowchart TD
     J --> K[Citation / Source]
 ```
 
-*Figure 13 — A hospital RAG pipeline. Access control and source attribution are requirements, not later additions.*
+*Figure 18 — A hospital RAG pipeline. Access control and source attribution are requirements, not later additions.*
 
 Important requirements include:
 
@@ -871,45 +1488,348 @@ Important requirements include:
 
 ---
 
-## 19. Voice-to-Text and SOAP Capture
+## 32. Voice-to-Text and SOAP Capture
 
 Another important healthcare AI workflow is voice-enabled clinical documentation.
 
-For example:
+### What SOAP actually holds
+
+SOAP is not four free-text boxes. Each section has a defined content type, and the specification should say so, because that structure is what makes the note queryable later.
+
+| Section | Content |
+|---|---|
+| **S**ubjective | Chief complaint, symptoms, history, patient-reported information |
+| **O**bjective | Vitals, examination findings, laboratory results, radiology, observations |
+| **A**ssessment | Clinical assessment, diagnosis, problem list, differential diagnosis |
+| **P**lan | Medication, investigations, procedures, referral, follow-up, instructions |
+
+### The voice pathway
 
 ```mermaid
 flowchart TD
-    A[Doctor speaks] --> B[Voice-to-Text]
-    B --> C[Clinical structuring]
-    C --> D[SOAP draft]
-    D --> E[Doctor review]
-    E --> F[Doctor approval]
-    F --> G[Clinical record]
+    A[Doctor] --> B[Voice capture]
+    B --> C[Speech-to-text]
+    C --> D[Transcript]
+    D --> E[Medical structuring]
+    E --> F[SOAP draft]
+    F --> G[Doctor review]
+    G --> H[Doctor edit]
+    H --> I[Doctor validation]
+    I --> J[Doctor signature]
+    J --> K[Official clinical record]
 ```
 
-*Figure 14 — Voice-captured SOAP documentation. Nothing reaches the clinical record without clinician approval.*
+*Figure 19 — The voice pathway. Ten steps, and the record becomes official only at the last one.*
 
 The important principle is:
 
 > **AI should assist documentation; the authorized clinician remains responsible for reviewing and approving the final clinical record.**
 
-The specification should define:
+Stated as a constraint the system enforces rather than a policy people remember:
 
-- Recording behavior
-- Transcription
-- Speaker handling
-- Medical terminology
-- Error handling
-- Editing
-- Review
-- Approval
-- Audit trail
-- Data retention
-- Access control
+> **Healthcare principle**
+>
+> AI-generated clinical documentation remains a draft until it is reviewed, validated and signed by an authorised clinician. Until signature, it is not part of the clinical record and must not be readable as though it were.
+{: .callout .callout--principle}
+
+The specification should define recording behaviour including pause, resume and stop; transcription and its confidence handling; speaker identification where supported; timestamps; medical terminology handling; error handling; editing and review; approval and signature; the audit trail; data retention; and access control.
+
+It should also define **versioning and amendment**. A signed note that is later amended does not overwrite the original — both versions persist, with the author, time and reason for the amendment, because the first version may already have informed a decision.
+
+Where the system supports multiple languages — English and Tamil, for instance, in a Tamil Nadu hospital — the specification should state which languages are supported at capture, whether the structured output is produced in the source language or translated, and which version is the record of truth. Translation quality is a clinical-safety concern, not a localisation preference, so the signed record should be in the language the clinician actually reviewed.
 
 ---
 
-## 20. Claude Code, Codex, Cursor and Spec Kit
+## 33. Agent Orchestration and Handoff
+
+Agents do not talk to the hospital directly. Every request passes through the same chain, and each link exists to answer one question.
+
+```mermaid
+flowchart TD
+    U[User or Event] --> ID[Identity + RBAC]
+    ID --> CTX[Consent + Context]
+    CTX --> ORCH[Agent Orchestrator]
+    ORCH --> DOM[Domain Agents]
+    DOM --> GATE{Policy / Safety Gate}
+    GATE -->|Blocked| EXC[Human Exception Queue]
+    GATE -->|Allowed| TOOL[Tool Gateway]
+    TOOL --> APPR{Human approval<br/>required?}
+    APPR -->|Yes| HUM[Approver]
+    HUM --> SYS[Hospital Systems]
+    APPR -->|No| SYS
+    SYS --> AUD[Audit + Observability]
+```
+
+*Figure 20 — The orchestration chain. Identity before context, context before reasoning, policy before tools, approval before writes, audit over everything.*
+
+The domain agents sitting behind the orchestrator mirror the domains from section 17: patient, clinical, diagnostics, pharmacy, finance, insurance, operations, HR and patient experience.
+
+### Agent-to-agent handoff
+
+Real hospital work crosses domains. Discharge is the clearest example, and it shows agents participating in an orchestrated workflow rather than acting as isolated chatbots.
+
+```text
+Doctor marks likely discharge
+        ↓
+Discharge Agent
+        ↓
+Diagnostic Agent          (any results still pending?)
+        ↓
+Pharmacy Agent            (take-home medication ready?)
+        ↓
+Billing Agent             (charges captured?)
+        ↓
+Insurance Agent           (claim position settled?)
+        ↓
+Facilities / Transport    (bed turnaround, patient transport)
+        ↓
+Discharge Summary Agent   (draft prepared)
+        ↓
+Doctor Approval           ← human
+        ↓
+Billing Approval          ← human
+        ↓
+Discharge
+```
+
+Each arrow is a specification with its own inputs, exceptions and audit events. The two human checkpoints at the end are not delays in the workflow — they are the workflow's purpose.
+
+---
+
+## 34. Agent Tools, Permissions and Memory
+
+### Tools, not database access
+
+An agent's capability is exactly the set of tools it holds. Nothing else.
+
+```text
+Appointment Agent   → Appointment Tool
+Lab Agent           → LIS Tool
+Radiology Agent     → RIS / PACS Tool
+Billing Agent       → Billing Tool
+Insurance Agent     → Insurance Tool
+Inventory Agent     → Inventory Tool
+```
+
+Agents must not have unrestricted database access. Every action routes through a gateway that can refuse it:
+
+```text
+Agent → Policy Gateway → Tool Gateway → Authorised System Action
+```
+
+The policy gateway decides whether this agent, acting for this user, may take this action on this record. The tool gateway executes it as a bounded operation with its own validation. Separating the two means a compromised or confused agent still cannot exceed its permissions — a defence that matters specifically because prompt injection is a live risk wherever agents read text written by other people.
+
+### Memory and context
+
+Agent memory is scoped deliberately, in four bands:
+
+- **Short-term context** — the current workflow only.
+- **Patient context** — only the patient data the acting user is authorised to see.
+- **Organisational context** — hospital policies and SOPs.
+- **Long-term knowledge** — versioned RAG collections, as described in section 31.
+
+Context must be permission-aware, scoped, tenant-aware, purpose-specific and auditable. An agent inherits the permissions of the person it acts for; it never accumulates a broader view by virtue of having been used by many people.
+
+---
+
+## 35. Human Approval and AI Safety Classification
+
+### The approval matrix
+
+| Agent | Action | Human approval |
+|---|---|---|
+| Appointment | Schedule | No |
+| Patient Access | Registration | Conditional |
+| Diagnostic Coordination | Scheduling | No |
+| Billing Explanation | Explain a charge | No |
+| Insurance | Submit preauthorisation | Yes |
+| Billing | Financial adjustment | Yes |
+| Discharge | Draft summary | Yes |
+| Nursing Handover | Handover | Nurse |
+| SOAP | Clinical documentation | Doctor |
+| Radiology | AI screening | Radiologist interprets |
+| Emergency Triage | Acuity decision | Clinician |
+| Diagnosis | Diagnosis | Clinician |
+| Prescription | Prescription | Clinician |
+
+For every high-risk workflow the sequence is fixed:
+
+> **AI Recommendation → Human Review → Human Approval → System Action**
+
+### Risk classification
+
+**Low risk.** Appointments, reminders, notifications, FAQ answers, scheduling.
+
+**Medium risk.** Billing explanation, insurance document preparation, operational forecasting, staffing suggestions.
+
+**High risk.** Clinical documentation, nursing handover, critical result escalation, radiology screening, discharge readiness.
+
+**No autonomous decision, at any risk appetite.** Diagnosis, treatment, prescribing, emergency acuity, end-of-life decisions, consent, breaking bad news, final radiology interpretation, and discharge against medical advice.
+
+> **Healthcare principle**
+>
+> The last list is not a maturity stage to graduate from. These are decisions that require an accountable clinician, and the architecture is built so that no agent can take them regardless of how capable the underlying model becomes.
+{: .callout .callout--principle}
+
+---
+
+## 36. Agent Failure, Observability and Evaluation
+
+### Failure and recovery
+
+Every agent needs a timeout, a retry policy, a fallback, a human escalation path, duplicate prevention, idempotency, an audit trail and an explicit failure status.
+
+```text
+Agent
+  ↓
+Tool Failure
+  ↓
+Retry
+  ↓
+Retry Exhausted
+  ↓
+Human Exception Queue
+  ↓
+Resolution
+  ↓
+Resume Workflow
+```
+
+*Figure 21 — Failure path. The exception queue is a real work queue with an owner, not a log line.*
+
+Idempotency deserves emphasis. An agent that retries a "create appointment" call without an idempotency key books the patient twice, and the second booking looks exactly like a legitimate one.
+
+### Observability
+
+Track agent execution: start and end time, latency, success and failure, tool calls made, model and model version, prompt version, token usage and cost, human approval outcome, escalations, exceptions and the eventual outcome.
+
+Model and prompt version are the fields that make an incident investigable. Without them, "the agent behaved differently last week" is unanswerable.
+
+### Evaluation
+
+Evaluate accuracy, groundedness, citation quality, safety, completeness, hallucination rate, tool-call correctness, policy compliance and human-approval compliance.
+
+The last one is the most hospital-specific: an agent that produces excellent drafts but occasionally writes to the record without approval has failed, however good the drafts were.
+
+---
+
+## 37. RAG, Agents, Tools and People
+
+These four are routinely conflated, and the conflation is where unsafe designs come from.
+
+```text
+RAG    → Knowledge
+Agent  → Reasoning and workflow
+Tool   → Action
+Human  → Accountability for high-risk decisions
+```
+
+RAG is not an agent: it retrieves and grounds, it does not act. An agent is not "a RAG chatbot": it reasons over context and calls tools under policy. A tool is not an agent: it is a bounded, validated operation. And none of the three is a substitute for the person who is accountable.
+
+The hospital RAG design in section 31 is the knowledge layer these agents cite. It carries the same access control as everything else — retrieval is filtered by what the acting user may see, so an agent cannot launder unauthorised access through a knowledge query.
+
+---
+
+## 38. Agent Governance
+
+Agents are deployed software, so they need the governance ordinary services get, plus a few things ordinary services do not.
+
+An agent registry records, for every agent: owner, agent version, model version, prompt version, tool permissions, risk classification, approval policy, latest evaluation results, incident history, audit configuration, deployment status — and a kill switch with a rollback path.
+
+The kill switch is not a formality. When an agent misbehaves, the question "can we turn this one off without taking down the workflow it participates in?" has to have been answered at specification time, not discovered during an incident.
+
+---
+
+## 39. Requirement to Agent Traceability
+
+Section 14 traced one requirement to its tests. The same chain extends through agents, and this is the central claim of the whole architecture.
+
+```mermaid
+flowchart TD
+    R[Business Requirement] --> S[Hospital Specification]
+    S --> W[Workflow]
+    W --> A[Agent Specification]
+    A --> T[Tool Specification]
+    T --> P[Permission]
+    P --> H[Human Approval Rule]
+    H --> I[Implementation]
+    I --> TC[Test Cases]
+    TC --> AU[Audit Evidence]
+    AU -.->|Change request| S
+```
+
+*Figure 22 — Requirement to audit, through the agent. Every link is a reviewable artifact; the dotted path is the only sanctioned way to change one.*
+
+Worked through with a real operational goal:
+
+```text
+Requirement:     Reduce discharge delays.
+        ↓
+Specification:   Discharge readiness, blockers, ownership, SLAs.
+        ↓
+Agent:           Discharge Orchestration Agent.
+        ↓
+Tools:           Laboratory, Pharmacy, Billing, Insurance.
+        ↓
+Approval:        Doctor (summary) + Billing (final bill).
+        ↓
+Tests:           Each blocker scenario, plus deterioration cancels.
+        ↓
+Audit:           Every chase, state change and approval traceable.
+```
+
+> **Key insight**
+>
+> In a Hospital ERP, specifications define not only software modules but also the boundaries, responsibilities, permissions, safety controls, workflows, tests and accountability of every AI agent. An agent without a specification is an unreviewed change to clinical operations.
+{: .callout .callout--insight}
+
+---
+
+## 40. The End-to-End Agentic Hospital Journey
+
+Putting the catalogue together, one patient's pathway runs through many agents and several human checkpoints. The checkpoints are marked, because they are the design.
+
+```text
+Patient
+  ↓
+Appointment Agent
+  ↓
+Patient Access Agent
+  ↓
+Doctor                                    ← human: clinical encounter
+  ↓
+SOAP / Voice Agent                        → draft
+  ↓
+Doctor review and signature               ← human: record becomes official
+  ↓
+Diagnostic Coordination Agent
+  ↓
+Lab / Radiology
+  ↓
+Pathologist / Radiologist                 ← human: validation, interpretation
+  ↓
+Pharmacy Agent
+  ↓
+Billing Agent
+  ↓
+Insurance Agent
+  ↓
+Preauthorisation approval                 ← human: before submission
+  ↓
+Discharge Orchestration Agent
+  ↓
+Doctor + Billing approval                 ← human: discharge released
+  ↓
+Follow-up Agent
+  ↓
+Feedback Agent
+```
+
+Six human checkpoints in one journey. That ratio is the architecture's answer to the question the article opened with: AI accelerates the work between the checkpoints, and never removes one.
+
+---
+
+## 41. Claude Code, Codex, Cursor and Spec Kit
 
 Modern development can combine multiple AI coding environments with Spec Kit.
 
@@ -927,7 +1847,7 @@ flowchart TD
     F --> G[Tests]
 ```
 
-*Figure 15 — The coding environment varies; the artifacts it works from do not.*
+*Figure 23 — The coding environment varies; the artifacts it works from do not.*
 
 The tools may differ, but the source of truth remains the engineering artifacts.
 
@@ -937,7 +1857,7 @@ This creates an important separation:
 
 ---
 
-## 21. Git Provides Traceability
+## 42. Git Provides Traceability
 
 Because the artifacts are Markdown files stored in Git, a requirement change is a reviewable diff rather than a recollection.
 
@@ -956,13 +1876,13 @@ flowchart TD
     V1 -->|Change request, reviewed and approved| V2
 ```
 
-*Figure 16 — The same chain across two revisions. The diff shows not only what changed in the code, but which requirement authorised it.*
+*Figure 24 — The same chain across two revisions. The diff shows not only what changed in the code, but which requirement authorised it.*
 
 This creates a much clearer change history. The practical benefit is that a reviewer can ask "which requirement does this commit serve?" and get an answer from the repository rather than from memory.
 
 ---
 
-## 22. Requirements Will Change — and That Is Normal
+## 43. Requirements Will Change — and That Is Normal
 
 A frozen baseline does not mean requirements can never change.
 
@@ -990,7 +1910,7 @@ flowchart TD
     G --> H[Validation]
 ```
 
-*Figure 17 — Controlled change. Impact analysis and re-approval come before implementation.*
+*Figure 25 — Controlled change. Impact analysis and re-approval come before implementation.*
 
 The principle is:
 
@@ -998,7 +1918,7 @@ The principle is:
 
 ---
 
-## 23. Human-in-the-Loop Is Not a Bottleneck
+## 44. Human-in-the-Loop Is Not a Bottleneck
 
 Human review is sometimes described as slowing AI development.
 
@@ -1032,7 +1952,7 @@ The goal is to make humans **more effective**.
 
 ---
 
-## 24. A More Mature Development Loop
+## 45. A More Mature Development Loop
 
 The resulting development model is the loop this article has traced. Requirements become a specification. Clarification and human approval turn that specification into a baseline. Plan and tasks derive from the baseline, analysis checks them against it, implementation produces code and tests, and validation closes the loop. When something has to change, it re-enters through the specification rather than around it.
 
@@ -1042,7 +1962,110 @@ It is an **engineering governance model for AI-assisted development**.
 
 ---
 
-## 25. Healthcare Concerns the Specification Has to Carry
+## 46. Integration Architecture
+
+A Hospital ERP is never the only system in the building. The specification has to name what it talks to, and be honest about the maturity of each connection.
+
+| Area | Interfaces |
+|---|---|
+| Clinical | HIS, EMR, HL7, FHIR |
+| Laboratory | LIS, analyzer interfaces |
+| Imaging | RIS, PACS, DICOM |
+| Finance | Accounting systems, payment gateways |
+| Insurance | Payer and TPA portals |
+| Communication | SMS, email, WhatsApp |
+| HR | Payroll, biometric attendance |
+| AI | LLM serving, RAG, speech-to-text, model hosting |
+
+Every integration in a specification should carry a maturity label — **implemented**, **prototype**, **planned** or **external** — and the label should be accurate. Describing a conceptual interface in the same language as a running one is how an architecture diagram becomes a liability during procurement or an audit.
+
+> **Practical rule**
+>
+> Do not claim a real integration where only a conceptual one exists. A specification that marks an interface "planned" is more useful than one that implies it already works, because the first one can be scheduled and the second one cannot be trusted.
+{: .callout .callout--rule}
+
+---
+
+## 47. Error Scenarios
+
+Hospital software is judged on its bad days. Each scenario below deserves a specified path, and the path has the same five parts every time:
+
+```text
+Detection → Action → Escalation → Recovery → Audit
+```
+
+The scenarios worth specifying explicitly: duplicate patient records; appointment no-show and cancellation; bed unavailable; sample rejected; analyzer offline; critical result; corrected result; medicine out of stock; expired medicine; insurance rejection and payer query; payment failure, duplicate payment and refund; network failure; AI service unavailable; integration unavailable; unauthorised access attempt; and partial workflow completion.
+
+The last one is the most commonly under-specified. A workflow that fails halfway leaves the hospital in a state no screen was designed to display — a patient discharged in the clinical system but not the billing one, or stock deducted for a dispense that never happened. Specifying the compensating action is what makes that state recoverable rather than permanent.
+
+Worth noting for the agent architecture: **AI unavailable** must degrade to the manual pathway, not to a blocked workflow. If the SOAP agent is down, the doctor types the note. An agent that becomes a single point of failure for clinical documentation has been specified wrongly.
+
+---
+
+## 48. Analytics and the Management Copilot
+
+The analytics layer answers operational questions with evidence rather than assertion. Realistic questions a Management Copilot should handle:
+
+- Why did discharge turnaround time increase this month?
+- Which departments have the highest queue times?
+- What caused claim rejections to rise?
+- Which lab analyzers have the highest downtime?
+- Which medications are approaching expiry?
+- What is today's bed occupancy by ward?
+- Which AI agents have the highest failure or escalation rate?
+
+Two constraints make this an Answerer agent rather than a dashboard with a chat box. It must cite the evidence behind an answer, so a manager can check it. And it must respect data permissions — the copilot sees what the person asking is entitled to see, which means an aggregate that would disclose individual patient data to an unauthorised viewer must be refused rather than rounded.
+
+The last question in that list is deliberately recursive: the agents are part of hospital operations, so their reliability is an operational metric like any other, drawing on the observability data from section 36.
+
+---
+
+## 49. Testing the Specification and the Agents
+
+Section 14 showed acceptance criteria becoming test cases. Agents extend that ladder rather than replacing it.
+
+```text
+Requirement Test
+  ↓
+Specification Test
+  ↓
+Workflow Test
+  ↓
+Agent Test
+  ↓
+Tool Test
+  ↓
+Safety Test
+  ↓
+Human Approval Test
+  ↓
+Integration Test
+  ↓
+End-to-End Test
+  ↓
+Audit Verification
+```
+
+*Figure 26 — The testing ladder. The bottom rung verifies that the audit trail actually recorded what the layers above it did.*
+
+Agent-specific tests, each of which should exist for every agent in the catalogue:
+
+- **Trigger** — it starts when it should, and not otherwise.
+- **Context** — it sees only what the acting user may see.
+- **Tool correctness** — it calls the right tool with the right arguments.
+- **Permission enforcement** — a forbidden action is refused at the gateway, not merely avoided by the model.
+- **Refusal** — it declines out-of-scope and unsafe requests, including ones embedded in text it reads.
+- **Escalation** — it hands off to a person at the specified boundary.
+- **Human approval** — it cannot complete an approval-gated action without the approval.
+- **Duplicate prevention and idempotency** — a retry does not double-book, double-dispense or double-charge.
+- **Timeout, retry and recovery** — failures land in the exception queue with state intact.
+- **Audit** — every one of the above leaves the specified record.
+
+The permission and refusal tests deserve particular weight. They are the tests that verify the architecture rather than the model, and they should still pass when the model is replaced.
+
+---
+
+## 50. Healthcare Concerns the Specification Has to Carry
 
 General-purpose specifications tend to describe the happy path. Healthcare systems fail in the other direction: the hard requirements are about access, evidence and what happens when something breaks midway.
 
@@ -1071,7 +2094,7 @@ The engineering value of writing them down is narrow but real: a requirement exp
 
 ---
 
-## 26. What Spec-Driven Development Does Not Solve
+## 51. What Spec-Driven Development Does Not Solve
 
 A methodology is easier to trust when its limits are stated plainly. Spec-Driven Development does not, on its own, guarantee any of the following.
 
@@ -1092,7 +2115,7 @@ There is also a cost worth naming. Specifications take effort to write, review a
 
 ---
 
-## 27. The Bigger Idea
+## 52. The Bigger Idea
 
 The real opportunity with AI-assisted software development is not simply generating code faster.
 
@@ -1106,7 +2129,7 @@ They are operating within a defined engineering system.
 
 ---
 
-## 28. Final Takeaway
+## 53. Final Takeaway
 
 For a Hospital ERP, the combination of:
 
