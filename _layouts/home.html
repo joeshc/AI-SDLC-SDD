@@ -1,0 +1,18 @@
+---
+layout: default
+---
+<section class="intro">
+  <p class="intro__lede">{{ site.tagline }}</p>
+</section>
+
+<section class="archive">
+  {% for post in site.posts %}
+  <article class="entry">
+    <time class="entry__date" datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%b %Y" }}</time>
+    <h2 class="entry__title"><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h2>
+    <p class="entry__blurb">{{ post.description }}</p>
+  </article>
+  {% endfor %}
+</section>
+
+{{ content }}

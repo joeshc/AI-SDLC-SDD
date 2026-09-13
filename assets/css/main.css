@@ -1,0 +1,293 @@
+:root {
+  --ink: #16212e;
+  --ink-soft: #5b7086;
+  --paper: #ffffff;
+  --surface: #eef3f9;
+  --rule: #d7dee6;
+  --accent: #1d5fa8;
+
+  --measure: 68ch;
+  --wide: 46rem;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: 1.0625rem;
+  line-height: 1.68;
+  font-synthesis-weight: none;
+}
+
+/* ---- shell ---------------------------------------------------- */
+
+.masthead,
+main,
+.footer {
+  max-width: var(--wide);
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+
+.masthead {
+  padding-top: 3rem;
+  padding-bottom: 2.5rem;
+}
+
+.masthead__name {
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.masthead__name:hover { color: var(--accent); }
+
+.masthead__role {
+  margin: 0.35rem 0 0;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.footer {
+  margin-top: 5rem;
+  padding-top: 1.5rem;
+  padding-bottom: 4rem;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.footer p { margin: 0; }
+
+/* ---- home ----------------------------------------------------- */
+
+.intro__lede {
+  margin: 0 0 3.5rem;
+  max-width: 34ch;
+  font-size: 1.75rem;
+  line-height: 1.32;
+  letter-spacing: -0.012em;
+}
+
+.entry {
+  padding-block: 1.75rem;
+  border-top: 1px solid var(--rule);
+}
+
+.entry__date {
+  display: block;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.entry__title {
+  margin: 0.5rem 0 0.4rem;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: 1.3125rem;
+  font-weight: 600;
+  line-height: 1.28;
+  letter-spacing: -0.014em;
+}
+
+.entry__title a { color: var(--ink); text-decoration: none; }
+.entry__title a:hover { color: var(--accent); }
+
+.entry__blurb {
+  margin: 0;
+  max-width: var(--measure);
+  color: var(--ink-soft);
+  font-size: 0.9688rem;
+}
+
+/* ---- post head ------------------------------------------------ */
+
+.post__head {
+  padding-bottom: 2.25rem;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 2.75rem;
+}
+
+.post__head h1 {
+  margin: 0;
+  max-width: 24ch;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: clamp(2rem, 5.2vw, 2.875rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.026em;
+}
+
+.post__subtitle {
+  margin: 1rem 0 0;
+  max-width: 52ch;
+  font-size: 1.125rem;
+  color: var(--ink-soft);
+}
+
+.post__meta {
+  margin: 1.5rem 0 0;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.post__sep {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1px;
+  margin: 0 0.5rem;
+  vertical-align: middle;
+  background: var(--rule);
+}
+
+/* ---- prose ---------------------------------------------------- */
+
+.prose > * { max-width: var(--measure); }
+
+.prose h2 {
+  margin: 3.5rem 0 1rem;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: 1.4375rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.017em;
+}
+
+.prose h3 {
+  margin: 2.5rem 0 0.75rem;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.prose p { margin: 0 0 1.25rem; }
+
+.prose a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.prose ul, .prose ol { margin: 0 0 1.5rem; padding-left: 1.35rem; }
+.prose li { margin-bottom: 0.35rem; }
+
+.prose strong { font-weight: 600; }
+
+.prose hr {
+  max-width: none;
+  height: 1px;
+  margin: 3rem 0;
+  border: 0;
+  background: var(--rule);
+}
+
+.prose blockquote {
+  margin: 1.75rem 0;
+  padding: 0.1rem 0 0.1rem 1.25rem;
+  border-left: 2px solid var(--accent);
+  font-size: 1.1875rem;
+  line-height: 1.45;
+}
+
+.prose blockquote p:last-child { margin-bottom: 0; }
+
+/* ---- code + diagrams break out of the text measure ------------ */
+
+.prose pre,
+.prose .mermaid,
+.prose .highlighter-rouge {
+  max-width: none;
+}
+
+.prose pre {
+  margin: 1.75rem 0;
+  padding: 1.1rem 1.25rem;
+  overflow-x: auto;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  tab-size: 2;
+}
+
+.prose code {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.875em;
+}
+
+.prose :not(pre) > code {
+  padding: 0.12em 0.35em;
+  background: var(--surface);
+  border-radius: 2px;
+}
+
+.prose pre code { background: none; padding: 0; font-size: inherit; }
+
+.prose .mermaid {
+  margin: 2rem 0;
+  padding: 1.25rem;
+  overflow-x: auto;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  text-align: center;
+}
+
+.prose .mermaid svg { max-width: 100%; height: auto; }
+
+.prose table {
+  width: 100%;
+  margin: 1.75rem 0;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.prose th, .prose td {
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--rule);
+}
+
+.prose th {
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-weight: 600;
+}
+
+/* ---- a11y ----------------------------------------------------- */
+
+:where(a, button):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 40rem) {
+  body { font-size: 1rem; }
+  .masthead { padding-top: 2rem; padding-bottom: 2rem; }
+  .intro__lede { font-size: 1.4375rem; }
+  .prose h2 { margin-top: 2.75rem; font-size: 1.3125rem; }
+  .prose pre { font-size: 0.75rem; }
+}
