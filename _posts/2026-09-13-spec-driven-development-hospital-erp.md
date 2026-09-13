@@ -7,6 +7,139 @@ date: 2026-09-13
 slug: spec-driven-development-hospital-erp
 reading_time: "45 min read"
 tags: [ai, spec-driven-development, healthcare, architecture]
+last_modified_at: 2026-09-13
+
+# SEO title is deliberately shorter than the on-page H1: search results
+# truncate near 60 characters, while the heading can carry the full scope.
+seo_title: "Spec-Driven Development for a Hospital ERP with Agentic AI"
+seo_description: "How to build a Hospital ERP with spec-driven development: versioned specifications, governed AI agents, RAG, and human approval at every clinical decision."
+keywords:
+  - spec-driven development hospital ERP
+  - spec-driven development
+  - hospital ERP
+  - healthcare software architecture
+  - agentic AI in healthcare
+  - AI agents in healthcare
+  - RAG in healthcare
+  - GitHub Spec Kit
+  - AI-assisted software development
+  - human-in-the-loop AI
+  - clinical AI governance
+  - requirement traceability
+
+# One source for both the visible FAQ section and the FAQPage structured data.
+faq:
+  - q: "What is Spec-Driven Development?"
+    a: >-
+      Spec-Driven Development is an engineering practice in which a versioned,
+      reviewable specification — not a prompt or a ticket — is the source of
+      truth for what software should do. Architecture, tasks, code and tests
+      are derived from it, and changes flow back through it rather than
+      around it.
+  - q: "What is a Hospital ERP?"
+    a: >-
+      A Hospital ERP is the enterprise system that runs a hospital's clinical,
+      diagnostic, financial and operational work on one patient identity. It
+      spans registration, appointments, OPD, IPD, emergency, nursing,
+      laboratory, radiology, pharmacy, billing, insurance, inventory, HR and
+      analytics.
+  - q: "Why use Spec-Driven Development for a Hospital ERP?"
+    a: >-
+      Because most hospital defects live between modules rather than inside
+      them. A shared specification pins down what a patient, an encounter and
+      a charge mean across domains, and gives AI coding agents the intent,
+      constraints and acceptance criteria that a prompt does not carry.
+  - q: "How is spec-driven development different from prompt-driven development?"
+    a: >-
+      Both use AI. The difference is where intent is stored. In prompt-driven
+      work the reasoning is consumed and discarded, ambiguity is resolved
+      silently by the model, and change means another prompt. In spec-driven
+      work intent is versioned, ambiguity is decided by a human, and change is
+      a reviewed specification update.
+  - q: "What is Agentic AI in a Hospital ERP?"
+    a: >-
+      Agentic AI is an architecture in which specified agents act on hospital
+      workflows through a fixed set of tools, under explicit permissions and
+      approval boundaries. An agent is not a chatbot: it has a purpose, a risk
+      classification, an audit trail and a defined escalation path to a person.
+  - q: "What is RAG in a hospital context?"
+    a: >-
+      RAG, or retrieval-augmented generation, grounds answers in the hospital's
+      own policies, SOPs and clinical guidelines instead of model memory.
+      Retrieval is filtered by what the asking user is authorised to see, and
+      answers carry source attribution so a reader can check them.
+  - q: "What is the difference between RAG and an AI agent?"
+    a: >-
+      RAG supplies knowledge; an agent supplies reasoning and workflow; a tool
+      performs the action; and a person remains accountable for high-risk
+      decisions. RAG retrieves and grounds but does not act, so presenting a
+      RAG chatbot as an agent — or an agent as merely RAG — produces unsafe
+      designs.
+  - q: "How does human-in-the-loop AI work in a hospital?"
+    a: >-
+      For any high-risk workflow the sequence is fixed: AI recommendation,
+      human review, human approval, then system action. A clinical note stays
+      a draft until an authorised clinician signs it, and a preauthorisation
+      pack is not submitted until a person approves it.
+  - q: "Can AI agents make clinical decisions?"
+    a: >-
+      No. Diagnosis, treatment, prescribing, emergency triage acuity,
+      end-of-life decisions, consent and final radiology interpretation are
+      excluded from autonomous action at any risk appetite. Agents may
+      prepare, route, prioritise and draft; accountable clinicians decide.
+  - q: "How is AI-generated code validated?"
+    a: >-
+      Every acceptance criterion in the specification maps to named test
+      cases, including the negative ones. Agents add their own tests for
+      trigger correctness, permission enforcement, refusal, escalation,
+      idempotency and audit — so the architecture is verified, not just the
+      model's output.
+  - q: "How does GitHub Spec Kit fit in?"
+    a: >-
+      Spec Kit provides the workflow that turns requirements into persistent
+      artifacts: a project constitution, a specification, clarification, a
+      plan, tasks and a consistency analysis before implementation. Each stage
+      produces a file in Git rather than a transient answer.
+  - q: "What modules should a Hospital ERP contain?"
+    a: >-
+      At minimum: patient identity and registration, appointments, OPD, IPD,
+      emergency, doctor and nursing workflows, clinical documentation,
+      laboratory, radiology, pharmacy, inventory, stores, procurement,
+      operating theatre, blood bank, billing, GST, insurance, HR,
+      administration, analytics, and the audit and access control beneath them.
+---
+
+**Spec-Driven Development (SDD) is an engineering practice in which a versioned, reviewable specification — not a prompt and not a ticket — is the source of truth for what software should do.** Architecture, implementation tasks, code and tests are all derived from it, and when something changes, the change re-enters through the specification rather than around it.
+
+That matters more for a Hospital ERP than for most systems. A hospital runs dozens of interlocking domains on a single patient identity, and the defects that hurt live between those domains rather than inside any one of them. AI coding agents can generate the software quickly, but speed does not answer whether the generated system matches what the hospital actually needs — which is a requirements problem, not a coding one.
+
+This article sets out the full hospital domain model, the Spec Kit workflow that turns requirements into durable artifacts, and an Agentic AI architecture in which every hospital AI agent is a specified, permissioned, auditable component with a human approval boundary.
+
+## Key Takeaways
+
+- A Hospital ERP is a federation of clinical, diagnostic, financial and operational domains sharing one patient identity; most serious defects appear at the seams between them.
+- AI-generated code does not remove the need for explicit requirements. It raises the cost of leaving them implicit.
+- Specifications belong in version control as engineering artifacts, alongside the plan, tasks and tests derived from them.
+- Domain-expert and product-owner approval turns a drafted specification into an approved baseline; implementation works from the baseline, not from a conversation.
+- AI agents should act through a fixed set of tools under a policy gateway, never through unrestricted database access.
+- RAG supplies grounded knowledge, agents supply reasoning and workflow, tools perform actions, and people remain accountable for high-risk decisions.
+- Diagnosis, prescribing, triage acuity and final radiology interpretation stay with qualified clinicians at any level of AI capability.
+- Traceability from requirement through specification, tasks, code and tests to audit evidence is what makes the result reviewable months later.
+
+### At a glance
+
+| Area | Purpose | AI opportunity | Human oversight |
+|---|---|---|---|
+| Patient registration | Establish patient identity | Duplicate detection and matching | Required on probable duplicates |
+| Appointments | Scheduling and queueing | Slot selection, rescheduling | Not required for routine booking |
+| Clinical documentation | SOAP notes and the record | Voice capture, structured drafting | Clinician signature required |
+| Laboratory | Diagnostics and analyzers | Workflow coordination, critical-result routing | Technical and pathologist validation |
+| Radiology | Imaging and reporting | Screening and worklist prioritisation | Radiologist interprets |
+| Pharmacy | Medication workflow | Availability, verification support | Pharmacist and clinician |
+| Billing and insurance | Revenue cycle | Explanation, document assembly | Required before submission or adjustment |
+| RAG knowledge | Grounded access to policy and SOPs | Cited answers from hospital sources | Required for sensitive decisions |
+| AI agents | Workflow execution | Orchestration across domains | Required for every critical action |
+
 ---
 
 ## 1. The Problem: AI Can Write Code — But Does It Know What Should Be Built?
@@ -196,7 +329,7 @@ A practical consequence worth stating early: if a coding agent needs a decision 
 
 ## 3. GitHub Spec Kit and the Spec-Driven Workflow
 
-GitHub Spec Kit provides a structured workflow for turning requirements into implementation.
+[GitHub Spec Kit](https://github.com/github/spec-kit) provides a structured workflow for turning requirements into implementation.
 
 The overall flow can be represented as:
 
@@ -1987,7 +2120,7 @@ A Hospital ERP is never the only system in the building. The specification has t
 
 | Area | Interfaces |
 |---|---|
-| Clinical | HIS, EMR, HL7, FHIR |
+| Clinical | HIS, EMR, HL7, [FHIR](https://www.hl7.org/fhir/) |
 | Laboratory | LIS, analyzer interfaces |
 | Imaging | RIS, PACS, DICOM |
 | Finance | Accounting systems, payment gateways |
