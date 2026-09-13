@@ -370,6 +370,54 @@ main,
 .prose td, .prose th { min-width: 7rem; }
 .prose td:first-child, .prose th:first-child { min-width: 6rem; }
 
+/* ---- FAQ ------------------------------------------------------- */
+
+.faq {
+  max-width: var(--measure);
+  margin-top: 3.5rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--rule);
+}
+
+.faq h2 {
+  margin: 0 0 1.25rem;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: 1.4375rem;
+  font-weight: 600;
+  letter-spacing: -0.017em;
+}
+
+.faq__item { border-bottom: 1px solid var(--rule); }
+
+.faq__q {
+  padding: 0.85rem 0;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.faq__q::-webkit-details-marker { display: none; }
+
+.faq__q::before {
+  content: "+";
+  display: inline-block;
+  width: 1.1rem;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.faq__item[open] .faq__q::before { content: "\2212"; }
+
+.faq__a {
+  padding: 0 0 1rem 1.1rem;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.faq__a p { margin: 0; }
+
 /* ---- author card ---------------------------------------------- */
 
 .author-card {
