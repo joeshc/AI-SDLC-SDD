@@ -65,7 +65,20 @@
       }
     });
 
-    await mermaid.run({ suppressErrors: false });
+    // mermaid.run() only defaults to querySelector '.mermaid' when called with no
+    // argument at all — passing any options object replaces that default, and run()
+    // then throws "Nodes and querySelector are both undefined" before rendering
+    // anything, leaving the swapped-in divs showing raw diagram source. Pass the
+    // nodes explicitly, one at a time, so a single bad diagram cannot blank the rest.
+    const diagrams = document.querySelectorAll('div.mermaid');
+    for (const node of diagrams) {
+      try {
+        await mermaid.run({ nodes: [node] });
+      } catch (err) {
+        console.error('Mermaid could not render a diagram:', err);
+      }
+    }
+
     if (reduced) document.documentElement.classList.add('reduced-motion');
   </script>
 </body>
