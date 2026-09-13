@@ -35,8 +35,15 @@
   </main>
 
   <footer class="footer">
-    <p>{{ site.author }} · Chennai</p>
-    <p><a href="https://www.linkedin.com/in/joe-nishanth">LinkedIn</a> · <a href="{{ '/feed.xml' | relative_url }}">RSS</a></p>
+    <div class="footer__identity">
+      <p>{{ site.author }} · Chennai</p>
+      <p class="footer__contact">
+        <a href="mailto:joe.shc@gmail.com">joe.shc@gmail.com</a>
+        <span aria-hidden="true"> · </span>
+        <a href="tel:+919003319856">+91-9003319856</a>
+      </p>
+    </div>
+    <p class="footer__links"><a href="https://www.linkedin.com/in/joe-nishanth">LinkedIn</a> · <a href="{{ '/feed.xml' | relative_url }}">RSS</a></p>
   </footer>
 
   <script type="module">
