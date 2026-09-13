@@ -55,9 +55,25 @@ main,
 .masthead__top {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 0.35rem 1rem;
+}
+
+/* Avatar sits inside the name link, so the two act as one target. */
+.masthead__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.masthead__avatar {
+  display: block;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--surface);
 }
 
 .masthead__link {
