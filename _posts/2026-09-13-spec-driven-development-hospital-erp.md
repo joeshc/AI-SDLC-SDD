@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Spec-Driven Development for a Hospital ERP: Human-in-the-Loop Agentic AI, RAG, Voice-to-Text and SOAP Capture"
+title: "Spec-Driven Development for a Hospital ERP: Human-in-the-Loop Agentic AI, RAG, Voice-to-Text and SOAP Capture with Claude Code and Codex Coding Agents"
 subtitle: "Clear specs. Smarter development. Better healthcare."
 description: "A reference guide to building a Hospital ERP with Spec-Driven Development: the full clinical, diagnostic, financial and operational domain model, and an Agentic AI architecture where every hospital AI agent is a specified, governed, testable component with defined tools, permissions, approval boundaries and audit."
 date: 2026-09-13
