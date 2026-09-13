@@ -202,20 +202,40 @@ The overall flow can be represented as:
 
 ```mermaid
 flowchart TD
-    A[Requirements] --> B[specify init]
-    B --> C[Constitution]
-    C --> D[Specification]
-    D --> E[Clarification]
-    E --> F[Human Review / Approval]
-    F --> G[Approved Spec Baseline]
-    G --> H[Plan]
-    H --> I[Tasks]
-    I --> J[Analyze]
-    J --> K[Implementation]
-    K --> L[Code + Tests]
+    R(["Business requirement"])
+
+    subgraph DEF["Define"]
+        INIT("specify init")
+        CON["constitution.md"]
+        SPEC["spec.md"]
+        CLR("/speckit.clarify")
+    end
+
+    subgraph APR["Approve"]
+        REV{"Human review"}
+        BASE["Approved baseline"]
+    end
+
+    subgraph BLD["Build"]
+        PLAN["plan.md"]
+        TASK["tasks.md"]
+        ANA{"/speckit.analyze"}
+        IMPL("/speckit.implement")
+        OUT["Code + tests"]
+    end
+
+    R --> INIT --> CON --> SPEC --> CLR --> REV
+    REV -->|Changes needed| SPEC
+    REV -->|Approved| BASE
+    BASE --> PLAN --> TASK --> ANA
+    ANA -->|Drift found| PLAN
+    ANA -->|Aligned| IMPL --> OUT
+    OUT -->|Gap discovered| REV
 ```
 
-*Figure 5 — The Spec Kit workflow. Each stage produces a persistent artifact rather than a transient answer.*
+*Figure 5 — The Spec Kit workflow in three phases. Rectangles are artifacts that persist in Git, rounded boxes are commands or activities, diamonds are decisions.*
+
+Three edges in that diagram matter as much as the forward path. Review can send a specification back for changes. Analysis can send drift back to the plan before any code is generated. And a gap discovered during implementation returns to review rather than being settled in place — the rule section 9 sets out in detail.
 
 The important idea is that each stage produces a persistent engineering artifact.
 
