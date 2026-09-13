@@ -20,7 +20,13 @@
 </head>
 <body>
   <header class="masthead">
-    <a class="masthead__name" href="{{ '/' | relative_url }}">{{ site.title }}</a>
+    <div class="masthead__top">
+      <a class="masthead__name" href="{{ '/' | relative_url }}">{{ site.title }}</a>
+      <a class="masthead__link"
+         href="https://www.linkedin.com/in/joe-nishanth"
+         rel="me noopener"
+         target="_blank">LinkedIn</a>
+    </div>
     <p class="masthead__role">AI Agents Developer — Healthcare, automation, applied GenAI</p>
   </header>
 
@@ -30,7 +36,7 @@
 
   <footer class="footer">
     <p>{{ site.author }} · Chennai</p>
-    <p><a href="https://in.linkedin.com/in/joe-nishanth">LinkedIn</a> · <a href="{{ '/feed.xml' | relative_url }}">RSS</a></p>
+    <p><a href="https://www.linkedin.com/in/joe-nishanth">LinkedIn</a> · <a href="{{ '/feed.xml' | relative_url }}">RSS</a></p>
   </footer>
 
   <script type="module">
