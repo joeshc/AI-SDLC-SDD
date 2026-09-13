@@ -261,6 +261,7 @@ main,
 .prose th, .prose td {
   padding: 0.6rem 0.75rem;
   text-align: left;
+  vertical-align: top;
   border-bottom: 1px solid var(--rule);
 }
 
@@ -268,6 +269,57 @@ main,
   font-family: "IBM Plex Sans", system-ui, sans-serif;
   font-weight: 600;
 }
+
+/* ---- callouts ------------------------------------------------- */
+
+/* Blockquotes marked {: .callout} in the source: a labelled aside, visually
+   distinct from a pull quote. The label text carries the type, so the styling
+   does not have to rely on colour alone. */
+.prose blockquote.callout {
+  margin: 2rem 0;
+  padding: 0.95rem 1.15rem;
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 3px 3px 0;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.prose blockquote.callout > p:first-child {
+  margin-bottom: 0.35rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.prose blockquote.callout > p:last-child { margin-bottom: 0; }
+
+/* ---- figure captions ------------------------------------------ */
+
+.prose .mermaid + p em,
+.prose .mermaid + p > em:only-child {
+  display: block;
+  margin-top: -0.75rem;
+  color: var(--ink-soft);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-style: normal;
+  line-height: 1.5;
+}
+
+/* ---- wide tables scroll instead of crushing their columns ------ */
+
+.prose table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.prose td, .prose th { min-width: 7rem; }
+.prose td:first-child, .prose th:first-child { min-width: 6rem; }
 
 /* ---- a11y ----------------------------------------------------- */
 
@@ -290,4 +342,6 @@ main,
   .intro__lede { font-size: 1.4375rem; }
   .prose h2 { margin-top: 2.75rem; font-size: 1.3125rem; }
   .prose pre { font-size: 0.75rem; }
+  .prose .mermaid { padding: 0.75rem; }
+  .prose table { font-size: 0.875rem; }
 }
