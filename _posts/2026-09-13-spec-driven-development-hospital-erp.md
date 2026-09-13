@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "From Requirements to a Hospital ERP: Applying Spec-Driven Development with GitHub Spec Kit, AI Agents and Human-in-the-Loop Governance"
+title: "Spec-Driven Development for a Hospital ERP"
 subtitle: "Clear specs. Smarter development. Better healthcare."
 description: "A Hospital ERP spans registration, clinical workflows, pharmacy, billing and AI agents. How Spec-Driven Development with GitHub Spec Kit keeps AI-generated software traceable to business intent — through specifications, requirement traceability and human-in-the-loop governance."
 date: 2026-09-13
