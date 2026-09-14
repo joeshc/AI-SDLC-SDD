@@ -40,6 +40,7 @@ I write about the engineering discipline around AI systems rather than about mod
 - [LinkedIn](https://www.linkedin.com/in/joe-nishanth)
 - [GitHub](https://github.com/joeshc)
 - [X](https://x.com/joeshc)
+- [Instagram](https://www.instagram.com/joenishanth.p)
 - Email: [joe.shc@gmail.com](mailto:joe.shc@gmail.com)
 
 I work at Bosco Soft Technologies Pvt Ltd. Everything written here is my own view, not my employer's.
