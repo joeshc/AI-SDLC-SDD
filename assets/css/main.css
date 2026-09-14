@@ -86,6 +86,23 @@ main,
 
 .masthead__link:hover { text-decoration: underline; }
 
+.masthead__nav {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.9rem;
+}
+
+.author-card__bio {
+  margin: 0 0 1rem;
+  max-width: var(--measure);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.author-card__bio a { color: var(--accent); font-weight: 600; }
+
 .masthead__role {
   margin: 0.35rem 0 0;
   font-family: "IBM Plex Sans", system-ui, sans-serif;
